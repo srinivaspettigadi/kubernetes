@@ -1,0 +1,168 @@
+1. to get all the namespaces
+
+kubectl get namespaces
+
+2. for checking the token list
+
+kubeadm token list
+
+3. to join the master with node command
+
+kubeadm token create --print-join-command
+
+4. Information of pods and their implementattion
+
+kubectl explain pods
+
+5. get all the info of the pods
+
+kubectl describe pod <podname>
+kubectl describe service <servicename>
+kubectl describe deployment <deploymentname>
+
+6. checking the logs of pod
+
+kubectl logs <podname>
+
+7. to check all the pods logs
+
+kubectl get events -w 
+kubectl get events --watch
+
+8. creating a pod using yml file
+
+kubectl create -f <name.yml>
+
+9. Entering into the pod 
+
+kubectl exec -it <podname> bash
+
+10. check the list of svc, deployment, pods
+
+kubectl get svc
+kubectl get deployment
+kubectl get pods
+
+11. check the list svc, deployment, pods of other namespace
+
+kubectl get svc -n <namespace name>
+kubectl get deployment -n <namespace name>
+kubectl get pods -n <namespace name>
+
+12. Editing the svc , dployment
+
+kubectl edit deployment <deployment name> (or) kubectl edit deployment/deploymentname
+kubectl edit svc <servicename>  (or)  kubectl edit service/servicename
+
+13. Deleting kinds
+
+kubectl delete pods <podname>
+kubectl delete deployment <deploymentname>
+kubectl delete service <servicename>
+
+14. Checking the logs of multicontainer
+
+a. checking first container logs
+kubectl logs -c 1st mc1
+
+b. checking thelogs of second container
+kubectl logs -c 2nd mc2
+
+15. Get the clusterrolebinding of namespace
+
+kubectl get sa -n kubernetes-dashboard  --------> here sa means service account
+
+16. Create deployment with image x
+
+kubectl create deployment mydep --image=nginx
+
+17. Create deployment with image x and replicas
+
+kubectl create deployment mydep --image=nginx --replicas=3
+kubectl create deployment mydep --image=docker.io/httpd --replicas=3
+
+18. Create deployment with image z and and expose port
+
+kubectl create deployment mydep --image=docker.io/httpd --port=5701
+
+19. Create a deployment from image and writing into yml file
+
+kubectl create deployment mydb --image=docker.io/mysql --dry-run -o yaml > mydb.yml
+
+20. Checking the running logs after any change
+
+kubectl get pod -w
+
+21. How many types of imagepullpolicy is there
+
+There are 3 types --> Never, always, ifnotpresent
+
+22. Checking the versions of rollout present
+
+kubectl rollout history deployment/mydep
+
+23. How to pause the rollout process
+
+kubectl rollout pause deployment/mydep
+
+24. Resume the paused rollout process for particular deployment
+
+kubectl rollout resume deployment/mydep
+
+25. Rollout to particular version of deployment
+
+kubectl rollout undo deployment/mydep --to-revision=3
+
+26. Logging commands
+
+kubectl get events
+kubectl logs podname -f
+kubectl get pod/pods -w
+
+27. One of the important files
+
+sudo find / -name *.env
+/var/lib/kubelet/kubeadm-flags.env
+
+28. How many types we can create the secret
+
+docker-registry  Create a secret for use with docker registry
+generice         Create a secret for use with local file , directory or literal value
+tls              Create a TLS secret
+
+29. Creating a secret command
+
+kubectl create secret generic mysecret --from-literal='dbpass'='centos'  --> dbpass is key, centos is value
+
+30. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
