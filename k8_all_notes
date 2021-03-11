@@ -1,0 +1,1942 @@
+docker --version
+   74  docker version
+   75  sudo docker version
+   76  sudo docker images
+   78  sudo docker ps 
+   79  sudo docker pull centos 
+   80  sudo docker images 
+   81  sudo docker run -it centos bash
+   83  sudo docker ps 
+   84  sudo docker start 79dd185393ab
+   85  sudo docker ps 
+   86  sudo docker exec -it  79dd185393ab bash
+---
+ sudo docker pull httpd
+    3  sudo docker inspect httpd 
+    4  sudo docker run --name=app1 httpd 
+    5  sudo docker start app1
+    6  sudo docker ps 
+    7  sudo docker inspect app1
+    8  curl 172.17.0.2
+    9  sudo docker stop app1
+   10  sudo docker rm app1
+---
+sudo docker run --name=app2 -p 18080:80 -d httpd
+   14  hostname -i
+   15  sudo docker run --name=app3 -p 28080:8080 -d docker.io/openshift/hello-openshift
+   16  history 
+   17  sudo docker inspect docker.io/openshift/hello-openshift
+---
+sudo docker run -e MYSQL_ROOT_PASSWORD=centos --name=mydb -d mysql:5.6
+   21  sudo sudo exec -it mydb bash
+   22  sudo docker exec -it mydb bash
+--
+--
+PDF 
+
+https://drive.google.com/file/d/1qeBRoAwwEg9YbHXZ5vyyAS5Srz0sHnIj/view?usp=sharing
+--
+
+sudo kubeadm reset  (on all machines) 
+---
+
+On all machines 
+
+---
+For installations 
+On master
+sudo kubeadm init 
+sudo mkdir $HOME/.kube/
+    3  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    4  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+    5  sudo kubectl get nodes
+
+---
+
+On all node
+Copy the join command with sudo 
+
+
+--
+
+kubectl get pods -n kube-system
+   16  kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+   17  kubectl get pods -n kube-system
+   18  kubectl get nodes
+
+Ref : https://www.weave.works/docs/net/latest/kubernetes/kube-addon/ 
+
+If you miss the join command
+kubeadm token create --print-join-command
+
+--
+
+kubectl get nodes -o wide
+  107  kubectl describe node ip-172-31-5-38
+  108  kubectl get nodes
+  109  kubectl delete node ip-172-31-8-146
+  110  kubectl get nodes
+  111  sudo kubeadm token create --print-join-command
+  112  kubectl get nodes
+  113  sudo kubectl get pod -n kube-system -o wide
+  114  kubectl describe pod etcd-ip-172-31-7-1 -n kube-system
+
+Capacity → Reference https://kubernetes.io/docs/setup/best-practices/cluster-large/ 
+---
+
+Date : 11th Oct 2020 
+----
+
+gedit pod.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myfirstpod1
+  labels:
+    mycka: simplilearn
+spec:
+  containers:
+  - name: mycontainer
+    image: docker.io/httpd
+    ports:
+    - containerPort: 80
+
+  119  cat pod.yml
+  120  kubectl create -f pod.yml 
+  121  kubectl get pods 
+  122  kubectl get pods -o wide
+  123  gedit pod.yml 
+  124  kubectl create -f pod.yml 
+  125  kubectl get pods -o wide
+
+kubectl describe pod myfirstpod
+kubectl logs myfirstpod
+kubectl get events -w
+----
+
+ kubectl get pods --show-labels
+
+vi svc.yml
+kind: Service
+apiVersion: v1
+metadata:
+  name: myservice
+spec:
+  selector: 
+      mycka: simplilearn  
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 80
+--
+
+  160  cat svc.yml 
+  161  kubectl create -f svc.yml 
+  162  vi svc.yml 
+  163  kubectl create -f svc.yml 
+  164  kubectl get svc
+  165  curl 10.96.67.71:8081
+  166  kubectl describe svc myservice
+  167  kubectl get pods -o wide
+
+--
+168  kubectl exec -it myfirstpod1 bash
+echo "hello from pod1 , this is srinivas here " >> htdocs/index.html 
+exit
+--
+  169  curl 10.96.67.71:8081
+---
+Task 
+Deploy docker.io/openshift/hello-openshift and map a service 
+Note: Don't forget to use different labels for pod 
+
+ kubectl create deployment test1 --image=docker.io/httpd 
+   21  kubectl get pods 
+   22  kubectl scale deployment test1 --replicas=2
+   23  kubectl get pods 
+   24  kubectl scale deployment test1 --replicas=1
+   25  kubectl get pods 
+   26  kubectl delete deployment test1
+   27  kubectl get pods 
+   28  kubectl create deployment test1 --image=docker.io/httpd 
+   31  kubectl expose deployment test1 --type=NodePort --port=80
+---
+
+
+
+
+ kubectl create deployment --help
+    2  clear
+    3  kubectl create deployment mydb --image=docker.io/mysql:5.6 --dry-run -o yaml > mysql.yaml
+    4  vi mysql.yaml 
+    5  kubectl create -f mysql.yaml 
+    6  kubectl get pods -w
+    7  kubectl exec -it mydb-56dc7b8596-xvzs7 bash
+    8  clear
+    9  history 
+   10  vi mysql.yaml 
+cat mysql.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: mydb
+  name: mydb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mydb
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mydb
+    spec:
+      containers:
+      - image: docker.io/mysql:5.6
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: centos
+        resources: {}
+status: {}
+
+   11  kubectl expose deployment mydb --port=3306
+   12  kubectl get svc
+   13  kubectl create deployment frontend --image=wordpress --dry-run -o yaml > wp.yaml
+   14  vi wp.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: frontend
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - image: wordpress
+        name: wordpress
+        env: 
+        - name: WORDPRESS_DB_HOST
+          value: mydb
+        - name: WORDPRESS_DB_PASSWORD
+          value: centos
+        resources: {}
+status: {}
+
+   15  kubectl get svc
+
+   17  kubectl create -f wp.yaml 
+   18  kubectl get pods -w
+   19  kubectl get pods 
+   20  kubectl logs frontend-58f8f46c79-qgtwt
+   21  kubectl expose deployment frontend --port=80 --type=NodePort
+   22  kubectl get svc
+   23  kubectl get nodes -o wide
+   24  kubectl exec -it mydb-56dc7b8596-xvzs7 bash
+root@mydb-56dc7b8596-xvzs7:/# mysql -uroot -pcentos
+
+Try: https://github.com/dockersamples/example-voting-app 
+
+---
+Date: 17th Oct 2020
+---
+
+kubectl get pods -n kube-system -o wide
+   17  kubectl describe pod etcd-ip-172-31-30-21 -n kube-system
+     20  kubectl exec -it etcd-ip-172-31-30-21 -n kube-system /bin/sh
+   21  kubectl describe pod etcd-ip-172-31-30-21 -n kube-system
+   22  export advertise_url=https://172.31.30.21:2379
+   23  echo $advertise_url
+    26  kubectl exec -it -n kube-system etcd-ip-172-31-30-21 -- sh -c "ETCDCTL_API=3 etcdctl --endpoints $advertise_url --cacert /etc/kubernetes/pki/etcd/ca.crt --key /etc/kubernetes/pki/etcd/server.key --cert /etc/kubernetes/pki/etcd/server.crt snapshot save test1.db"
+   30  kubectl cp etcd-ip-172-31-30-21:/test1.db /tmp/test1.db -n kube-system
+------------
+ kubectl exec -it -n kube-system etcd-ip-172-31-30-21 -- sh -c "ETCDCTL_API=3 etcdctl --endpoints $advertise_url --cacert /etc/kubernetes/pki/etcd/ca.crt --key /etc/kubernetes/pki/etcd/server.key --cert /etc/kubernetes/pki/etcd/server.crt get \"\" --prefix=true -w json" > etcd.json
+   40  ls
+   41  cat etcd.json 
+   42  for k in $(cat etcd.json | jq '.kvs[].key' | cut -d '"' -f2); do echo $k | base64 --decode; echo; done
+   43  sudo apt  install jq
+   44  for k in $(cat etcd.json | jq '.kvs[].key' | cut -d '"' -f2); do echo $k | base64 --decode; echo; done
+     46  for k in $(cat etcd.json | jq '.kvs[].value' | cut -d '"' -f2); do echo $k | base64 --decode; echo; done
+---
+kubectl create namespace ibm
+    2  kubectl create namespace ibmdev
+    3  kubectl create deployment test1 --image=docker.io/httpd -n ibm 
+    4  kubectl get pods 
+    5  kubectl delete deployment test1
+    6  kubectl get pods 
+    8  kubectl get pods -n ibm
+   10  kubectl expose deployment test1 --port=80 -n ibm
+   11  kubectl get all -n ibm
+   12  kubectl delete namespace ibm
+
+
+
+ kubectl config set-context $(kubectl config current-context) --namespace=ibm
+   16  kubectl get pods 
+   20  kubectl config view
+   21  kubectl config set-context $(kubectl config current-context) --namespace=default
+   22  kubectl config view
+---
+Task (MIMP*****)
+Create a wordpress pod in a namespace called frontend and map it to the database resides into the namespace called backend (dont use IP address of service, use service name) 
+Create a mysql pod in a namespace called backend 
+
+----
+
+
+--
+
+ cat pod.yml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myfirstpod1
+  labels:
+    mycka: simplilearn
+spec:
+  containers:
+  - name: mycontainer
+    image: docker.io/httpd
+    ports:
+    - containerPort: 80
+  nodeName: ip-172-31-29-217
+
+   46  kubectl create -f pod.yml 
+   47  kubectl get pods -o wide
+   48  clear
+   49  kubectl get nodes
+   50  kubectl label node ip-172-31-29-217 type=old
+   51  kubectl label node ip-172-31-25-7 type=new
+   52  kubectl get nodes --show-labels
+   53  cp pod.yml nodepod.yml
+   54  vi nodepod.yml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myfirstpod2
+  labels:
+    mycka: simplilearn
+spec:
+  containers:
+  - name: mycontainer
+    image: docker.io/httpd
+    ports:
+    - containerPort: 80
+  nodeSelector:
+    type: old
+
+   55  kubectl create -f nodepod.yml 
+   56  kubectl get pods -o wide
+   57  kubectl get nodes --show-labels
+Task: 
+Create a deployment file and use nodeselector to it
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cache
+spec:
+  selector:
+    matchLabels:
+      app: store
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: store
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: type
+                operator: NotIn
+                values:
+                - old
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: redis-server
+        image: redis:3.2-alpine
+---
+   15  kubectl create -f setbased.yml 
+    19  kubectl get nodes --show-labels
+   20  kubectl edit node ip-172-31-30-21
+  ---
+vi req.yml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cpu-demo
+spec:
+  containers:
+  - name: cpu-demo-ctr
+    image: docker.io/httpd
+    resources:
+      limits:
+        cpu: "1"
+      requests:
+        cpu: "0.5"
+--
+    4  kubectl create -f req.yml 
+    5  kubectl get pods -o wide
+    6  kubectl describe node ip-172-31-25-7
+---
+Date : 18th Oct 2020
+Daemonsets 
+
+cat ds.yml 
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: frontend
+spec:
+  selector:
+    matchLabels:
+      name: frontend-webserver
+  template:
+    metadata:
+      labels:
+        name: frontend-webserver
+    spec:
+      containers:
+        - name: webserver
+          image: httpd
+          ports:
+          - containerPort: 80
+---
+
+--
+Static POD 
+cat /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+# Note: This dropin only works with kubeadm and kubelet v1.11+
+[Service]
+Environment="KUBELET_KUBECONFIG_ARGS=--bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf"
+Environment="KUBELET_CONFIG_ARGS=--config=/var/lib/kubelet/config.yaml"
+# This is a file that "kubeadm init" and "kubeadm join" generates at runtime, populating the KUBELET_KUBEADM_ARGS variable dynamically
+EnvironmentFile=-/var/lib/kubelet/kubeadm-flags.env
+# This is a file that the user can use for overrides of the kubelet args as a last resort. Preferably, the user should use
+# the .NodeRegistration.KubeletExtraArgs object in the configuration files instead. KUBELET_EXTRA_ARGS should be sourced from this file.
+EnvironmentFile=-/etc/default/kubelet
+ExecStart=
+ExecStart=/usr/bin/kubelet $KUBELET_KUBECONFIG_ARGS $KUBELET_CONFIG_ARGS $KUBELET_KUBEADM_ARGS $KUBELET_EXTRA_ARGS --pod-manifest-path=/test/
+
+---
+
+mkdir /test
+    4  vi /test/pod.yml 
+    5  vi /test/pod1.yml
+    6  ls /test/
+    7  systemctl daemon-reload 
+    8  systemctl restart kubelet
+    9  rm /test/pod1.yml 
+-----
+
+Metrics 
+
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.6/components.yaml
+
+
+
+<<PATCH>>
+wget -c https://gist.githubusercontent.com/initcron/1a2bd25353e1faa22a0ad41ad1c01b62/raw/008e23f9fbf4d7e2cf79df1dd008de2f1db62a10/k8s-metrics-server.patch.yaml
+
+kubectl patch deploy metrics-server -p "$(cat k8s-metrics-server.patch.yaml)" -n kube-system
+
+kubectl top --help
+kubectl top node
+ 2046  kubectl top pod
+ 2047  kubectl top pod -n kube-system
+---
+
+HPA 
+cat hpaexample.yml 
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: php-apache
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    run: php-apache
+status:
+  loadBalancer: {}
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    run: php-apache
+  name: php-apache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: php-apache
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        run: php-apache
+    spec:
+      containers:
+      - image: k8s.gcr.io/hpa-example
+        name: php-apache
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 200m
+status: {}
+
+cat hpa.yml
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  creationTimestamp: null
+  name: php-apache
+spec:
+  maxReplicas: 10
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-apache
+  targetCPUUtilizationPercentage: 50
+status:
+  currentReplicas: 0
+  desiredReplicas: 0
+
+----
+
+
+kubectl run -i --tty load-generator --image=busybox /bin/sh
+
+while true; do wget -q -O- http://php-apache.default.svc.cluster.local; done
+---
+kubectl create -f dep1.yml 
+   47  kubectl get pods 
+   48  kubectl get pods  -w
+   49  vi hpa.yml
+   50  kubectl create -f hpa.yml 
+   51  kubectl top pods 
+   52  kubectl get hpa
+   53  kubectl run -i --tty load-generator --image=busybox /bin/sh
+   54  kubectl get deployment
+   55  kubectl expose deployment php-apache --port=80
+   56  kubectl run -i --tty load-generator --image=busybox /bin/sh
+   57  kubectl run -i --tty load-generator1 --image=busybox /bin/sh
+   58  kubectl get pods 
+---
+Extra’s 
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wildfly-example
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: php-apache	
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: 80
+  - type: Resource
+    resource:
+      name: memory
+      targetAverageValue: 1000Mi
+---
+
+
+---
+Prometheus 
+
+kubectl create namespace monitoring
+git clone https://github.com/bibinwilson/kubernetes-prometheus
+cd kubernetes-prometheus 
+kubectl create -f .
+
+
+Grafana
+Cat grafana.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+data:
+  prometheus.yaml: |-
+    {
+        "apiVersion": 1,
+        "datasources": [
+            {
+               "access":"proxy",
+                "editable": true,
+                "name": "prometheus",
+                "orgId": 1,
+                "type": "prometheus",
+                "url": "http://prometheus-service.monitoring.svc:8080",
+                "version": 1
+            }
+        ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      name: grafana
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - name: grafana
+          containerPort: 3000
+        resources:
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+          requests: 
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+          - mountPath: /var/lib/grafana
+            name: grafana-storage
+          - mountPath: /etc/grafana/provisioning/datasources
+            name: grafana-datasources
+            readOnly: false
+      volumes:
+        - name: grafana-storage
+          emptyDir: {}
+        - name: grafana-datasources
+          configMap:
+              defaultMode: 420
+              name: grafana-datasources
+---   
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+  annotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/port:   '3000'
+spec:
+  selector: 
+    app: grafana
+  type: NodePort  
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 32000
+--
+--
+https://grafana.com/grafana/dashboards?search=kubernetes
+
+for node level https://grafana.com/grafana/dashboards/10000
+
+for namespace base - https://grafana.com/grafana/dashboards/10551
+--
+
+ kubectl get pods 
+    3  kubectl logs php-apache-74489d489b-v7f8v
+    4  kubectl logs php-apache-74489d489b-v7f8v --tail=10
+    5  kubectl logs php-apache-74489d489b-v7f8v -f
+    6  kubectl logs php-apache-74489d489b-v7f8v --since=1h
+    7  kubectl get pods -n monitoring
+    8  kubectl get pods -n kube-system
+    9  kubectl describe pod weave-net-nqxd5 -n kube-system
+   10  #weave:
+   11  #weave-npc:
+   13  kubectl get pods -n kube-system
+   14  kubectl logs weave-net-smjsl -c weave-npc
+   15  kubectl logs weave-net-smjsl -c weave-npc -n kube-system
+   16  kubectl logs weave-net-smjsl -c weave -n kube-system
+---
+Date: 24th Oct 2020
+--
+vi ghost.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kubernetes.io/change-cause: kubectl run mydep --image=ghost:0.9 --record=true
+      --dry-run=true --output=yaml
+  creationTimestamp: null
+  labels:
+    run: mydep
+  name: mydep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: mydep
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        run: mydep
+    spec:
+      containers:
+      - image: ghost:0.9
+        name: mydep
+        resources: {}
+status: {}
+---
+    2  kubectl create -f ghost.yml
+    3  kubectl rollout history mydep
+    6  kubectl rollout history deployment/mydep
+    7  cat ghost.yml
+    8  kubectl rollout history deployment/mydep
+   10  kubectl set image deployment/mydep mydep=ghost:0.12 --record
+   11  kubectl rollout history deployment/mydep
+   12  kubectl rollout undo deployment/mydep --to-revision=1
+   13  kubectl rollout history deployment/mydep
+   15  kubectl rollout pause deployment/mydep
+   16  kubectl set image deployment/mydep mydep=ghost:0.11 --record
+   17  kubectl get pods
+   18  kubectl rollout resume deployment/mydep
+   21  kubectl rollout pause deployment/mydep
+   22  kubectl get deployment
+   23  kubectl describe deployment mydep
+---
+
+apiVersion: v1
+kind: Pod
+metadata:
+    name: command-demo
+    labels: 
+        purpose: demo-command
+spec:
+    containers:
+    - name: command-demo-container
+      image: ubuntu
+      command: ["hostname"]
+--
+apiVersion: v1
+kind: Pod
+metadata:
+    name: command-demo1
+    labels: 
+        purpose: demo-command
+spec:
+    containers:
+    - name: command-demo-container
+      image: ubuntu
+      command: ["/bin/sh"]
+      args: ["-c", "while true; do echo hello; sleep 10;done"]
+--
+Reference : https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/ 
+---
+Secret
+--
+vi mysql.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: mydb
+  name: mydb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mydb
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mydb
+    spec:
+      containers:
+      - image: docker.io/mysql:5.6
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: centos
+        resources: {}
+status: {}
+---
+
+   46  kubectl create -f mysql.yml
+   49  kubectl  get pods
+   50  kubectl edit deployment mydb
+   55  kubectl create secret generic mysecret  --from-literal=mypass=centos --from-literal=mypass1=redhat
+   56  kubectl edit secret mysecret
+   57  kubectl get deployment
+   58  kubectl edit deployment mydb
+- name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: dbpass
+              name: mysecret
+
+   59  kubectl get pods -w
+   60  kubectl exec -it mydb-79f7dd78-qcjwr bash
+   61  kubectl edit secret mysecret
+----
+Cat cmap.yml
+kind: ConfigMap 
+apiVersion: v1 
+metadata:
+  name: example-configmap 
+data:
+  # Configuration values can be set as key-value properties
+  database: mongodb
+  database_uri: mongodb://localhost:27017
+
+kubectl create -f cmap.yml
+
+cat configpod.yml 
+kind: Pod 
+apiVersion: v1 
+metadata:
+  name: pod-env-var 
+spec:
+  containers:
+    - name: env-var-configmap
+      image: nginx:1.7.9 
+      envFrom:
+        - configMapRef:
+            name: example-configmap
+---
+kubectl create -f configpod.yml 
+ 2019  kubectl get pods -w
+ 2020  kubectl exec -it pod-env-var bash
+env
+---
+kind: Pod 
+apiVersion: v1 
+metadata:
+  name: pod-env12
+spec:
+  containers:
+    - name: env-var-configmap
+      image: nginx:1.7.9 
+      env:
+        - name: testenv
+          valueFrom: 
+           configMapKeyRef:
+             name: example-configmap
+             key: database
+--
+
+cat configfile.yml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: testconfig
+spec:
+  containers:
+    - name: test
+      image: docker.io/httpd
+      volumeMounts:
+      - name: config-volume
+        mountPath: /tmp/myenvs/
+  volumes:
+    - name: config-volume
+      configMap:
+        name: example-configmap 
+  restartPolicy: Never
+---
+
+Extra’s
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secret-test-pod
+spec:
+  containers:
+    - name: test-container
+      image: nginx
+      volumeMounts:
+        # name must match the volume name below
+        - name: secret-volume
+          mountPath: /etc/secret-volume
+  # The secret data is exposed to Containers in the Pod through a Volume.
+  volumes:
+    - name: secret-volume
+      secret:
+        secretName: mysecret
+---
+Date 25th Oct 2020 
+
+cat multicont.yml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mc1
+spec:
+  volumes:
+  - name: html
+    emptyDir: {}
+  containers:
+  - name: 1st
+    image: nginx
+    volumeMounts:
+    - name: html
+      mountPath: /usr/share/nginx/html
+  - name: 2nd
+    image: debian
+    volumeMounts:
+    - name: html
+      mountPath: /html
+    command: ["/bin/sh", "-c"]
+    args:
+      - while true; do
+          date >> /html/index.html;
+          sleep 1;
+        done
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mc2
+spec:
+  containers:
+  - name: producer
+    image: allingeek/ch6_ipc
+    command: ["./ipc", "-producer"]
+  - name: consumer
+    image: allingeek/ch6_ipc
+    command: ["./ipc", "-consumer"]
+  restartPolicy: Never
+--
+
+cat init.yml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: docker.io/httpd
+  initContainers:
+  - name: init-myservice
+    image: busybox
+    command: ['sh', '-c', 'until nslookup myservice; do echo waiting for  myservice; sleep 2; done;']
+---
+ kubectl create -f init.yml 
+    4  kubectl get pods 
+    5  kubectl logs myapp-pod -c init-myservice -f
+    6  vi svc.yml
+    7  kubectl create -f svc.yml 
+    8  kubectl get pods -w
+    9  kubectl create -f svc.yml 
+   10  kubectl logs myapp-pod -c init-myservice -f
+--
+cat init2.yml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: docker.io/httpd
+  initContainers:
+  - name: init-myservice
+    image: busybox
+    command: ['sh', '-c', 'until nslookup myservice; do echo waiting for  myservice; sleep 2; done;']
+  - name: init-mydb
+    image: busybox
+    command: ['sh', '-c', 'until nslookup mydb; do echo waiting for mydb; sleep 2; done;']
+---
+Task 
+Use init containers in below example 
+
+vi wp.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: frontend
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - image: wordpress
+        name: wordpress
+        env: 
+        - name: WORDPRESS_DB_HOST
+          value: mydb
+        - name: WORDPRESS_DB_PASSWORD
+          value: centos
+     initContainers:
+      - name: init-myservice
+        image: busybox
+        command: ['sh', '-c', 'until nslookup mydb; do echo waiting for  myservice; sleep 2; done;']
+        resources: {}
+status: {}
+--
+
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    test: liveness
+  name: liveness-exec
+spec:
+  containers:
+  - name: liveness
+    image: k8s.gcr.io/busybox
+    args:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      initialDelaySeconds: 5
+      periodSeconds: 5
+--
+
+
+ kubectl create -f probes.yml 
+   44  kubectl get pods 
+   45  kubectl describe pod liveness-exec
+   46  kubectl get pods 
+--
+apiVersion: v1
+kind: Pod
+metadata:
+  name: goproxy
+  labels:
+    app: goproxy
+spec:
+  containers:
+  - name: goproxy
+    image: k8s.gcr.io/goproxy:0.1
+    ports:
+    - containerPort: 8080
+    readinessProbe:
+      tcpSocket:
+        port: 8080
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    livenessProbe:
+      tcpSocket:
+        port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 20
+---
+
+Lifecycle hooks ---> https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/ 
+
+----
+Dashboard 
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0/aio/deploy/recommended.yaml
+   51  kubectl get pods -n kubernetes-dashboard
+   52  kubectl get svc -n kubernetes-dashboard
+   53  kubectl edit  svc kubernetes-dashboard -n kubernetes-dashboard
+   54  kubectl get svc -n kubernetes-dashboard
+   55  kubectl get nodes -o wide
+   56  kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep kubernetes-dashboard | awk '{print $1}')
+---
+
+kubectl get -o yaml clusterrolebindings kubernetes-dashboard  > crb.yml
+   72  vi crb.yml 
+Change clusterrole to admin 
+   74  kubectl delete -f crb.yml 
+   75  kubectl create -f crb.yml 
+   76  kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep kubernetes-dashboard | awk '{print $1}')
+--
+Date : 31-Oct-2020
+
+kubectl describe node ip-172-31-29-217
+ kubectl drain ip-172-31-29-217 --ignore-daemonsets --delete-local-data --force
+  120  kubectl describe node ip-172-31-29-217
+  121  kubectl uncordon ip-172-31-29-217 
+  122  kubectl get nodes
+---
+ kubeadm upgrade plan
+    5  kubeadm upgrade apply v1.18.10
+    6  kubeadm upgrade apply v1.18.10 --force
+    7  kubectl get nodes
+    8  apt-get upgrade kubelet
+    9  apt-get update #on all nodes
+   10  apt-get upgrade kubelet
+---
+ kubectl describe pod etcd-ip-172-31-30-21 -n kube-system
+   22  export advertise_url=https://172.31.30.21:2379
+   23  echo $advertise_url
+    26  kubectl exec -it -n kube-system etcd-ip-172-31-30-21 -- sh -c "ETCDCTL_API=3 etcdctl --endpoints $advertise_url --cacert /etc/kubernetes/pki/etcd/ca.crt --key /etc/kubernetes/pki/etcd/server.key --cert /etc/kubernetes/pki/etcd/server.crt snapshot save test1.db"
+   30  kubectl cp etcd-ip-172-31-30-21:/test1.db /tmp/test1.db -n kube-system
+---
+
+kubectl get deployments,service -n monitoring -o yaml > mymon.yml
+  191  vi mymon.yml 
+  192  kubectl delete namespace monitoring
+  193  kubectl create namespace monitoring
+  194  kubectl create -f mymon.yml 
+  195  kubectl get pods -n monitoring
+  196  kubectl get all -n monitoring
+--
+kubectl get pods -n kube-system
+  199  kubectl describe pod kube-controller-manager-ip-172-31-30-21 -n kube-system
+  201  sudo vi /etc/kubernetes/controller-manager.conf
+
+  204  kubectl get pods -n kube-system
+
+  205  kubectl describe kube-apiserver-ip-172-31-30-21 -n kube-system 
+
+  206  kubectl describe pod  kube-apiserver-ip-172-31-30-21 -n kube-system 
+  208  sudo vi /etc/kubernetes/controller-manager.conf
+
+  209  kubectl get pods -n kube-system
+  210  kubectl describe pod kube-scheduler-ip-172-31-30-21 -n kube-system
+  212  sudo vi /etc/kubernetes/scheduler.conf
+--
+
+kubectl create sa myuser1 -n kubernetes-dashboard
+  220  kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep myuser1 | awk '{print $1}')
+
+ 
+ 225  kubectl create clusterrole pod-reader --verb=get,list,watch --resource=pods
+
+  229  kubectl create clusterrolebinding myrole --clusterrole=pod-reader  --serviceaccount=kubernetes-dashboard:myuser1 
+  230  kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep myuser1 | awk '{print $1}')
+---
+kubectl get clusterrole -o yaml edit
+--
+
+Upgrade Process → 
+https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/ 
+
+
+-- 
+On Simplilearn LABS
+sudo apt-get update && sudo apt-get install -y apt-transport-https curl
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+
+cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+
+   73  sudo apt-get update
+   74  apt-cache madison kubeadm
+Then follow the update process 
+--
+Date : 1st Nov 2020 
+
+RBAC Customization 
+
+kubectl create sa myuser3 -o yaml -n kubernetes-dashboard > myuser3.yml
+    3  cat myuser2.yml 
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp: "2020-11-01T15:21:23Z"
+  name: myuser3
+  namespace: kubernetes-dashboard
+  resourceVersion: "184866"
+  selfLink: /api/v1/namespaces/kubernetes-dashboard/serviceaccounts/myuser2
+  uid: 96374d9c-2684-4206-b554-67f487928e9d
+---
+
+    6  kubectl create -f myuser3.yml 
+
+    8  kubectl get clusterrole view -o yaml > myrole.yml
+    9  vi myrole.yml 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+  managedFields:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:aggregationRule:
+        .: {}
+        f:clusterRoleSelectors: {}
+      f:metadata:
+        f:annotations:
+          .: {}
+          f:rbac.authorization.kubernetes.io/autoupdate: {}
+        f:labels:
+          .: {}
+          f:kubernetes.io/bootstrapping: {}
+          f:rbac.authorization.k8s.io/aggregate-to-edit: {}
+    manager: kube-apiserver
+    operation: Update
+    time: "2020-10-17T14:16:31Z"
+  - apiVersion: rbac.authorization.k8s.io/v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:rules: {}
+    manager: kube-controller-manager
+    operation: Update
+    time: "2020-10-18T15:33:40Z"
+  name: view-custom
+  resourceVersion: "57754"
+  selfLink: /apis/rbac.authorization.k8s.io/v1/clusterroles/view
+  uid: 0cd638de-b205-4416-931a-462b1fd1f046
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - endpoints
+  - persistentvolumeclaims
+  - persistentvolumeclaims/status
+  - pods
+  - replicationcontrollers
+  - replicationcontrollers/scale
+  - serviceaccounts
+  - services
+  - services/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - bindings
+  - events
+  - limitranges
+  - namespaces/status
+  - pods/log
+  - pods/status
+  - replicationcontrollers/status
+  - resourcequotas
+  - resourcequotas/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - controllerrevisions
+  - daemonsets
+  - daemonsets/status
+  - deployments
+  - deployments/scale
+  - deployments/status
+  - replicasets
+  - replicasets/scale
+  - replicasets/status
+  - statefulsets
+  - statefulsets/scale
+  - statefulsets/status
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  - horizontalpodautoscalers/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  - cronjobs/status
+  - jobs
+  - jobs/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - extensions
+  resources:
+  - daemonsets
+  - daemonsets/status
+  - deployments
+  - deployments/scale
+  - deployments/status
+  - ingresses
+  - ingresses/status
+  - networkpolicies
+  - replicasets
+  - replicasets/scale
+  - replicasets/status
+  - replicationcontrollers/scale
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - patch
+  - update
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  - poddisruptionbudgets/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  - ingresses/status
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+--
+
+   12  kubectl create -f myrole.yml 
+   13  vi crb.yml 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"ClusterRoleBinding","metadata":{"annotations":{},"name":"kubernetes-dashboard"},"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"kubernetes-dashboard"},"subjects":[{"kind":"ServiceAccount","name":"kubernetes-dashboard","namespace":"kubernetes-dashboard"}]}
+  creationTimestamp: "2020-10-25T17:23:59Z"
+  managedFields:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          .: {}
+          f:kubectl.kubernetes.io/last-applied-configuration: {}
+      f:roleRef:
+        f:apiGroup: {}
+        f:kind: {}
+        f:name: {}
+      f:subjects: {}
+    manager: kubectl
+    operation: Update
+    time: "2020-10-25T17:23:59Z"
+  name: mycrb
+  resourceVersion: "93899"
+  selfLink: /apis/rbac.authorization.k8s.io/v1/clusterrolebindings/kubernetes-dashboard
+  uid: aec5a8ca-0841-4914-b81d-0753c1583eab
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view-custom
+subjects:
+- kind: ServiceAccount
+  name: myuser3
+  namespace: kubernetes-dashboard
+---
+   14  kubectl create -f crb.yml 
+
+   15  kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep myuser3 | awk '{print $1}')
+---
+Roles and Role Bindings 
+
+kubectl create sa myuser10 -n kubernetes-dashboard
+  253  vi role.yml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: simplilearn
+  name: view
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+
+  254  kubectl create -f role.yml 
+  255  vi rb.yml 
+apiVersion: rbac.authorization.k8s.io/v1
+# This role binding allows "jane" to read pods in the "default" namespace.
+# You need to already have a Role named "pod-reader" in that namespace.
+kind: RoleBinding
+metadata:
+  name: view10
+  namespace: simplilearn
+subjects:
+# You can specify more than one "subject"
+- kind: ServiceAccount
+  name: myuser10 # "name" is case sensitive
+  namespace: kubernetes-dashboard
+roleRef:
+  # "roleRef" specifies the binding to a Role / ClusterRole
+  kind: Role #this must be Role or ClusterRole
+  name: view  # this must match the name of the Role or ClusterRole you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+
+  256  kubectl create -f rb.yml 
+    265  kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep myuser10 | awk '{print $1}')
+  266  kubectl create deployment test --image=docker.io/httpd -n simplilearn
+---
+
+kubectl create namespace cisco
+ 1963  mkdir cisco
+ 1964  cd cisco/
+ 1966  sudo openssl genrsa -out user3.key 2048
+ 1968  sudo openssl req -new -key user3.key -out user3.csr
+ 1972  sudo openssl x509 -req -in user3.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out user3.crt -days 500
+Organisation name → namespace 
+and common name  → user3
+
+
+     kind: Role
+     apiVersion: rbac.authorization.k8s.io/v1beta1
+     metadata:
+        namespace: cisco
+        name: user3-role            
+     rules:
+     - apiGroups: ["", "extensions", "apps"]
+       resources: ["deployments", "pods", "services"]
+       verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+       kind: RoleBinding
+       apiVersion: rbac.authorization.k8s.io/v1beta1
+       metadata:
+          name: role-test
+          namespace: cisco
+       subjects:
+       - kind: User
+         name: user3
+         apiGroup: ""
+       roleRef:
+         kind: Role
+         name: user3-role
+         apiGroup: ""
+   
+    
+   kubectl create -f rolebind.yml
+  
+
+
+   Set credentials :
+
+    >>kubectl config set-credentials user3 --client-certificate=user3.crt --client-key=user3.key
+   
+  Set context to cisco Namespace:
+  
+
+    >> kubectl config set-context  user3-context --cluster=kubernetes --namespace=cisco --user=user3
+
+kubectl config get-contexts
+
+ cp ~/.kube/config config
+
+Remove the kubernetes-admin details from newly copied config file 
+
+Client machine 
+
+sudo mkdir .kube
+sudo vi .kube/config (pls copy your contents as it will be different) 
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN5RENDQWJDZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJd01UQXhOekUwTVRZd04xb1hEVE13TVRBeE5URTBNVFl3TjFvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTTV6CnJqM0gzM0N1M3ptODJiZ1BSS2JCWjVYbmZ6VWppbFo0QnlkZi93ZkE0dlNUNUZoUXFJR2lmWWdWWjRHNlRwbmoKV01lT080Y0ZDdDRLTGs3TTBJQXoyVXdBL3RCV1lDbnErUWZKRzYrMFE2eWRBVTByVHg2KzFxRmhwcnhSQ1B3bgplQVJ5K0FkWC92MEpSZ0s1U0c3cHliVW9laGJDSVhvVHd4Z2hpNmZEQ3p0SXdYSU9ENE5kYk5PNVRtVnFYdEltCm1MVStLM2kyeG9FU2FBcVkrUWRDSmR3VGhuNnQxenpyOENPMWlnZjczcllQai9oWUVkVW1QRVoyYmRPYk52NXUKTEgxTzdjTHhWQVpveHU3VnZoUk5tS1NoRW9YRVVZbVp4eFNzbnlSMUtwWEl6UmRzTy8yZlpDRkNyTFpIV2I1WQo5SnZoL2FrMXF6QVZhWlJVdllzQ0F3RUFBYU1qTUNFd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0RRWUpLb1pJaHZjTkFRRUxCUUFEZ2dFQkFFUUdQc0hna2NFbnhBVE52TzhNZHk3aENlZFUKcmFsdzBpVUthbGtHVU5hVVNRdDB2cGExQmUvbzdabTRDbFo5VkhlWVlIejBkT054VktpZjZzUlpFdnZXeEVtegpITmxWaE1aNVdmazlPQmpqMXAzNUNKc05wMzdxWjhUZVBob1BsQjJnN0JIdzkwWDJyV29uYWNvM0I5eUIxQmdtCkxKVlQ0Q0M0OUwrcTZsMDdkSmptU051WnJ4YmlHSE1kODE4WVZmOUJ0VFpMVU1Qc1crdG5LREJYRlNwZjYrTmcKR1FIdERtVVBnYnZtL3c2bGFXT2xsNzVTOWpQdG1teHVmVlF1cmluQnd3R2VVTDNsdzdldXZ3aFdwc1VwczVTTApUb1cxQjNmSTBYTmJ6ZGllV1V2c1dOUFV0anZ0K2VBYlQ1MnpzYmJwa3psOUNUQlE2ZjBaVUtaek9hTT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    server: https://172.31.30.21:6443
+  name: kubernetes
+contexts:
+- context:
+    cluster: kubernetes
+    namespace: default
+    user: kubernetes-admin
+  name: kubernetes-admin@kubernetes
+- context:
+    cluster: kubernetes
+    namespace: cisco
+    user: user3
+  name: user3-context
+current-context: user3-context
+kind: Config
+preferences: {}
+users:
+- name: user3
+  user:
+    client-certificate: /home/labsuser/cisco/user3.crt
+    client-key: /home/labsuser/cisco/user3.key
+--
+
+
+sudo mkdir cisco
+Copy user3.crt and user3.key contents to client machine 
+----
+
+>> kubectl get pods 
+
+Verify 
+cat .kube/config 
+  137  cat cisco/user3.key 
+  138  cat cisco/user3.crt
+--
+7-Nov-2020
+
+cat policy.yml 
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: web
+  name: web
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: web
+status:
+  loadBalancer: {}
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: web
+  name: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: web
+    spec:
+      containers:
+      - image: nginx
+        name: web
+        ports:
+        - containerPort: 80
+        resources: {}
+status: {}
+---
+kubectl run --rm -it --image=alpine test -- sh
+
+# wget -qO- --timeout=2 http://web 
+
+cat np.yml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: testing
+spec:
+  podSelector:
+    matchLabels:
+      app: web
+  ingress: []
+---
+kubectl create -f np.yml
+
+kubectl run --rm -it --image=alpine test -- sh
+
+# wget -qO- --timeout=2 http://web 
+---
+
+Example 2 
+
+cat policy1.yml 
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: bookstore
+    role: red
+  name: apiserver
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: bookstore
+    role: red
+status:
+  loadBalancer: {}
+---
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    app: bookstore
+    role: red
+  name: apiserver
+spec:
+  containers:
+  - image: nginx
+    name: apiserver
+    ports:
+    - containerPort: 80
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+---
+cat command.yml 
+apiVersion: v1
+kind: Pod
+metadata:
+    name: command-demo2
+    labels: 
+        app: hotel
+spec:
+    containers:
+    - name: command-demo-container
+      image: alpine
+      command: ["/bin/sh"]
+      args: ["-c", "while true; do echo hello; sleep 10;done"]
+
+kubectl create -f command1.yml 
+
+kubectl exec -it command-demo2 /bin/sh 
+wget -qO- --timeout=2 http://apiserver 
+
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: api-allow
+spec:
+  podSelector:
+    matchLabels:
+      app: bookstore
+      role: red
+  ingress:
+  - from:
+      - podSelector:
+          matchLabels:
+            app: bookstore
+
+cat command2.yml 
+apiVersion: v1
+kind: Pod
+metadata:
+    name: command-demo3
+    labels: 
+        app: bookstore
+spec:
+    containers:
+    - name: command-demo-container
+      image: alpine
+      command: ["/bin/sh"]
+      args: ["-c", "while true; do echo hello; sleep 10;done"]
+
+Kubectl create -f command1.yml
+ kubectl exec -it command-demo3 /bin/sh 
+wget -qO- --timeout=2 http://apiserver 
+
+--
+Cat np3.yml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  namespace: secondary
+  name: deny-from-other-namespaces
+spec:
+  podSelector:
+    matchLabels:
+  ingress:
+  - from:
+    - podSelector: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: foo-deny-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: foo
+  policyTypes:
+  - Egress
+  egress: []
+--
+
+--
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pd
+spec: 
+  containers:
+  - image: docker.io/httpd
+    name: test-container
+    volumeMounts:
+    - mountPath: /usr/local/apache2/htdocs
+      name: test-volume
+  volumes:
+  - name: test-volume
+    hostPath:
+      path: /ckaexam
+      type: DirectoryOrCreate
+--
+Use any node as NFS server 
+sudo mkdir /mydbdata
+sudo  apt-get update
+  118  sudo  apt install nfs-kernel-server
+  119  sudo  vi /etc/exports 
+/mydbdata *(rw,sync,no_root_squash)
+
+  122  sudo exportfs -r
+  126  sudo chown nobody:nogroup /mydbdata/
+  127  sudo chmod 777 /mydbdata/
+---
+On all nodes 
+sudo apt-get install nfs-client
+On any one node try this 
+
+sudo mount -t nfs serverIP:/mydbdata /mnt
+Eg. sudo mount -t nfs 172.31.25.7:/mydbdata /mnt 
+
+ 2079  df -h
+ 2080 sudo  umount /mnt
+
+---
+Date : 8th Nov 2020
+
+cat pv.yml 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: test
+  labels:
+    app: mysql
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: kslave1
+    # Exported path of your NFS server
+    path: "/mydbdata"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mypvc1
+  labels:
+    app: wordpress
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+
+cat pv-mysql.yml 
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: test-mysql
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: mysql
+    spec:
+      containers:
+      - image: mysql:5.6
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: password 
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: myvol1 
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: myvol1
+        persistentVolumeClaim:
+          claimName: mypvc1
+----
+
+
+ 1109  kubectl create -f pv-mysql.yml 
+ 1110  kubectl get pods -w
+ 1111  kubectl exec -it test-mysql-567f545996-fc9tq bash
+df -h
+---
+
+Task 1) https://kubernetes.io/docs/tutorials/stateful-application/mysql-wordpress-persistent-volume/
+
+---
+
+CoreDNS
+kubectl create -f mysql.yml
+kubectl expose deployment test-mysql --port=3306
+    4  kubectl get svc
+    5  nslookup google.com
+    6  nslookup test-mysql 
+      8  kubectl run --rm -it --image=busybox test -- sh
+    9  kubectl create namespace simp1
+   12  kubectl run -n simp1 --rm -it --image=busybox test -- sh 
+nslookup test-mysql
+nslookup test-mysql.default.svc.cluster.local (will work)
+   13  kubectl get pods -n kube-system
+--
+Calico → https://docs.projectcalico.org/about/about-calico
+--
+Reference : https://kubernetes.io/docs/concepts/services-networking/service/#externalname 
+
+---
+---
+Task (MIMP*****)
+Create a wordpress pod in a namespace called frontend and map it to the database resides into the namespace called backend (dont use IP address of service, use service name) 
+Create a mysql pod in a namespace called backend 
+--
+Ingress Controller 
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.31.1/deploy/static/provider/baremetal/deploy.yaml 
+
+ kubectl create deployment app1 --image=docker.io/httpd 
+  372  kubectl expose deployment app1 --port=80
+  373  kubectl create deployment app2 --image=docker.io/openshift/hello-openshift
+  374  kubectl expose deployment app2 --port=8080
+  375  kubectl get svc
+  376  curl 10.102.35.77
+  377  curl 10.98.61.53:8080
+  378  vi rule.yml
+apiVersion: networking.k8s.io/v1beta1  ### if it is v1.13 you can use extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test-ingress2
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /myapp1
+        backend:
+          serviceName: app1
+          servicePort: 80
+      - path: /myapp2
+        backend:
+          serviceName: app2
+          servicePort: 8080
+
+  379  kubectl create -f rule.yml 
+  380  kubectl get ingress
+--
+
+Extra
+MIMP
+apiVersion: networking.k8s.io/v1 ### if it is v1.13 you can use extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test-ingress211
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /myapp1
+        pathType: Prefix
+        backend:
+          service:
+            name: test
+            port:
+              number: 80
+--
+
