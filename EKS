@@ -4,6 +4,7 @@ https://www.youtube.com/watch?v=B0CGyboZnjg
 
 eksctl utils associate-iam-oidc-provider --cluster devcluster --approve
 
+This is sample version
 3.
 eksctl create iamserviceaccount \
   --name ebs-csi-controller-sa \  
