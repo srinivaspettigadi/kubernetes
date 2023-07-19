@@ -1,0 +1,7 @@
+avg_over_time(container_cpu_usage_seconds_total{job="kubelet", namespace="YOUR_NAMESPACE", container="airflow"}[10d])
+
+# Minimum CPU Usage
+min_over_time(container_cpu_usage_seconds_total{job="kubelet", namespace="YOUR_NAMESPACE", container="airflow"}[10d])
+
+# Maximum CPU Usage
+max_over_time(container_cpu_usage_seconds_total{job="kubelet", namespace="YOUR_NAMESPACE", container="airflow"}[10d])
