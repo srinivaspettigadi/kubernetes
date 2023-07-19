@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Set the KUBECONFIG environment variable to point to your kubeconfig file
+export KUBECONFIG=/path/to/your/kubeconfig
+
+# Define your Airflow pod selector (update this according to your labels)
+AIRFLOW_POD_SELECTOR="app=airflow"
+
+# Calculate the start time for the last 10 days in UTC format
+START_TIME=$(date -u --date="10 days ago" '+%Y-%m-%dT00:00:00Z')
+
+# Get the list of Airflow pods within the last 10 days
+PODS=$(kubectl get pods -l "$AIRFLOW_POD_SELECTOR" --field-selector=status.startTime>=$START_TIME -o json)
+
+# Function to extract CPU and Memory usage from a JSON string
+function extract_usage_metric() {
+    echo "$1" | jq -r ".usage.$2"
+}
+
+# Initialize min and max values
+MIN_CPU_USAGE=1000000  # Set to a high value
+MAX_CPU_USAGE=0
+MIN_MEM_USAGE=1000000000  # Set to a high value
+MAX_MEM_USAGE=0
+
+# Loop through the pods and find min and max usage
+while read -r pod; do
+    pod_name=$(echo "$pod" | jq -r '.metadata.name')
+    cpu_usage=$(extract_usage_metric "$pod" "cpu")
+    mem_usage=$(extract_usage_metric "$pod" "memory")
+
+    # Check and update min and max values
+    if (( $(echo "$cpu_usage < $MIN_CPU_USAGE" | bc -l) )); then
+        MIN_CPU_USAGE=$cpu_usage
+    fi
+
+    if (( $(echo "$cpu_usage > $MAX_CPU_USAGE" | bc -l) )); then
+        MAX_CPU_USAGE=$cpu_usage
+    fi
+
+    if (( $(echo "$mem_usage < $MIN_MEM_USAGE" | bc -l) )); then
+        MIN_MEM_USAGE=$mem_usage
+    fi
+
+    if (( $(echo "$mem_usage > $MAX_MEM_USAGE" | bc -l) )); then
+        MAX_MEM_USAGE=$mem_usage
+    fi
+
+done <<< "$PODS"
+
+# Print the results
+echo "Minimum CPU Usage: $MIN_CPU_USAGE"
+echo "Maximum CPU Usage: $MAX_CPU_USAGE"
+echo "Minimum Memory Usage: $MIN_MEM_USAGE"
+echo "Maximum Memory Usage: $MAX_MEM_USAGE"
