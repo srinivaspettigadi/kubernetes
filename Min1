@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Set the namespace and pod name of your Airflow pod
+NAMESPACE="your_airflow_namespace"
+POD_NAME="your_airflow_pod_name"
+
+# Get the current date and date 10 days ago in the format "YYYY-MM-DD"
+END_DATE=$(date -u +%Y-%m-%d)
+START_DATE=$(date -u --date="10 days ago" +%Y-%m-%d)
+
+# Loop through the date range and get the resource usage metrics for each day
+while [ "$START_DATE" != "$END_DATE" ]; do
+    # Fetch CPU and Memory usage data for the current date
+    CPU_USAGE=$(kubectl get pod -n $NAMESPACE $POD_NAME -o json | jq -r '.containers[].usage.cpu')
+    MEMORY_USAGE=$(kubectl get pod -n $NAMESPACE $POD_NAME -o json | jq -r '.containers[].usage.memory')
+
+    # Calculate the minimum and maximum usage for CPU and Memory
+    MIN_CPU=$(echo "$CPU_USAGE" | awk '{print $1}')
+    MAX_CPU=$(echo "$CPU_USAGE" | awk '{print $2}')
+    MIN_MEMORY=$(echo "$MEMORY_USAGE" | awk '{print $1}')
+    MAX_MEMORY=$(echo "$MEMORY_USAGE" | awk '{print $2}')
+
+    # Print the results for the current date
+    echo "Date: $START_DATE"
+    echo "Min CPU Usage: $MIN_CPU"
+    echo "Max CPU Usage: $MAX_CPU"
+    echo "Min Memory Usage: $MIN_MEMORY"
+    echo "Max Memory Usage: $MAX_MEMORY"
+    echo
+
+    # Move to the previous date
+    START_DATE=$(date -u --date "$START_DATE + 1 day" +%Y-%m-%d)
+done
