@@ -31,3 +31,24 @@ while [ "$START_DATE" != "$END_DATE" ]; do
     # Move to the previous date
     START_DATE=$(date -u --date "$START_DATE + 1 day" +%Y-%m-%d)
 done
+
+
+
+
+
+
+min_over_time(container_cpu_usage_seconds_total{namespace="airflow", pod_name=~"airflow-web.*"}[6h])
+max_over_time(container_cpu_usage_seconds_total{namespace="airflow", pod_name=~"airflow-web.*"}[6h])
+
+
+min_over_time(container_memory_usage_bytes{namespace="airflow", pod_name=~"airflow-web.*"}[6h])
+max_over_time(container_memory_usage_bytes{namespace="airflow", pod_name=~"airflow-web.*"}[6h])
+Note: The example queries assume that the Airflow web pod is running in the airflow namespace. Modify the namespace and pod name patterns according to your actual setup.
+
+Remember that Prometheus metrics are collected at specific intervals, so the precision of the results may vary depending on the resolution of your data. Additionally, adjust the time range in the [time_range] parameter based on your monitoring requirements.
+
+
+
+
+
+
