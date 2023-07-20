@@ -50,5 +50,9 @@ Remember that Prometheus metrics are collected at specific intervals, so the pre
 
 
 
+sum(
+  rate(container_cpu_usage_seconds_total{namespace="YOUR_NAMESPACE", pod_name=~"airflow.*"}[5m])
+) by (pod_name)
+
 
 
